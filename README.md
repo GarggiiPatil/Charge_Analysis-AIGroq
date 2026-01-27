@@ -1,10 +1,10 @@
-# 🚗⚡ Charge Analysis Report Generation using LLM (Groq AI)
+# Charge Analysis Report Generation using LLM (Groq AI)
 
 An end-to-end **LLM-assisted analytics system** that generates EV charge analysis reports from **natural language queries**, combining the flexibility of Large Language Models with the reliability of **SQL and Pandas**.
 
 ---
 
-## 📌 Project Overview
+##  Project Overview
 
 This project allows users to generate a **Charge Analysis Report** by simply typing a natural language query such as:
 
@@ -20,7 +20,7 @@ The system automatically:
 
 ---
 
-## 🧠 Key Design Principle
+##  Key Design Principle
 
 **LLM for understanding and insights, SQL/Pandas for computation**
 
@@ -33,7 +33,7 @@ All numerical metrics are computed deterministically using **SQL and Pandas** to
 
 ---
 
-## 🏗️ System Architecture
+##  System Architecture
 
 React Frontend
 ↓
@@ -47,7 +47,7 @@ SQLite Database + Pandas Metrics
 
 ---
 
-## ✨ Features
+##  Features
 
 - Natural language report generation
 - Deterministic KPI computation
@@ -59,7 +59,7 @@ SQLite Database + Pandas Metrics
 
 ---
 
-## 📊 Metrics Computed
+##  Metrics Computed
 
 - **Charged Vehicles** – Unique vehicles with valid charging cycles  
 - **Total Charged Cycles** – Total valid charging sessions  
@@ -71,7 +71,7 @@ SQLite Database + Pandas Metrics
 
 ---
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 ### Frontend
 - React (Vite)
@@ -93,9 +93,9 @@ SQLite Database + Pandas Metrics
 
 ---
 
-## 🚀 How to Run the Project
+##  How to Run the Project
 
-### 1️⃣ Backend Setup
+###  Backend Setup
 
 ```bash
 cd backend
@@ -114,7 +114,7 @@ npm install
 npm run dev
 ```
 
-## 📤 Sample Output
+##  Sample Output
 KPI summary cards
 LLM-generated business insights
 Detailed charge analysis table (city and vehicle-type wise)
