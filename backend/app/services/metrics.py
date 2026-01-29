@@ -69,11 +69,42 @@ def generate_charge_analysis(start_date: str, end_date: str):
         ) if total_cycles > 0 else 0
     }
 
+    #Chart Data Preperation
+    chart_data = {
+        "cycles_by_city":(
+            report_df.groupby("City")["Total_Charged_Cycles"]
+            .sum()
+            .reset_index()
+            .to_dict(orient="records")
+        ),
+
+        "charging_type":report_df[[
+            "City",
+            "Opportunity_Charged_Cycles",
+            "Full_Charged_Cycles"
+        ]].to_dict(orient="records"),
+
+        "faluts_interruptions": report_df[[
+            "City",
+            "Critical_Faculty_Cycles",
+            "Interruption_Cycles"
+        ]].to_dict(orient="records"),
+
+        "temperature": report_df[[
+            "City",
+            "MAX_Temp_Pack_A",
+            "MAX_Temp_Pack_B",
+            "MAX_Temp_Pack_C",
+            "MAX_Temp_Pack_D",
+        ]].to_dict(orient="records")
+    }
+
     return {
         "date_range": {
             "start_date": start_date,
             "end_date": end_date
         },
         "summary": insights,
-        "report_table": report_table
+        "report_table": report_table,
+        "charts":chart_data
     }
