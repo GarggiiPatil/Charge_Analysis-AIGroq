@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from app.services.llm_service import extract_dates, generate_insights
+from app.services.llm_service import generate_detailed_insights, extract_query_filters
 from app.services.metrics import generate_charge_analysis
 
 app = FastAPI(
@@ -31,34 +31,39 @@ class AnalysisResponse(BaseModel):
 
 # API ENDPOINT
 
-@app.post("/analyze", response_model=AnalysisResponse)
+@app.post("/analyze")
 def analyze_charge_report(request: AnalysisRequest):
     try:
-        # 1. Extract dates using LLM
-        dates = extract_dates(request.query)
+        filters = extract_query_filters(request.query)
 
-        start_date = dates.get("start_date")
-        end_date = dates.get("end_date")
+        start_date = filters.get("start_date")
+        end_date = filters.get("end_date")
+        city = filters.get("city")  # can be None
 
         if not start_date or not end_date:
-            raise ValueError("Invalid date extraction")
+            raise ValueError("Start date or end date missing")
 
-        # 2. Generate metrics
-        report = generate_charge_analysis(start_date, end_date)
+        report = generate_charge_analysis(
+            start_date=start_date,
+            end_date=end_date,
+            city=city
+        )
 
-        # 3. Generate insights
-        insights = generate_insights(
-            report["summary"],
+        insights = generate_detailed_insights(
+            report["report_table"],
             start_date,
-            end_date
+            end_date,
+            city
         )
 
         return {
             "date_range": report["date_range"],
             "summary": report["summary"],
             "insights": insights,
-            "report_table": report["report_table"]
+            "report_table": report["report_table"],
+            "charts": report["charts"]
         }
 
     except Exception as e:
+        print("ERROR:", str(e))
         raise HTTPException(status_code=400, detail=str(e))

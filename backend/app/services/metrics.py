@@ -10,9 +10,10 @@ from .sql_service import (
     CITY_VEHICLE_REPORT_QUERY
 )
 
-def generate_charge_analysis(start_date: str, end_date: str):
+def generate_charge_analysis(start_date: str, end_date: str, city: str = None):
     """
     Generates the full charge analysis report between given dates.
+    Optionally filters the report by city.
     """
 
     params = {
@@ -21,6 +22,7 @@ def generate_charge_analysis(start_date: str, end_date: str):
     }
 
     # KPI METRICS
+
     charged_vehicles = run_query(
         CHARGED_VEHICLES_QUERY, params
     ).iloc[0]["Charged_Vehicles"]
@@ -46,14 +48,22 @@ def generate_charge_analysis(start_date: str, end_date: str):
     ).iloc[0]["Full_Charged_Cycles"]
 
     # MAIN REPORT TABLE
+
     report_df = run_query(
         CITY_VEHICLE_REPORT_QUERY, params
     )
 
+    # Apply city filter if provided
+    if city:
+        report_df = report_df[
+            report_df["City"].astype(str).str.lower() == city.lower()
+        ]
+
     # Convert table to JSON
     report_table = report_df.to_dict(orient="records")
 
-    # SUMMARY INSIGHTS (RULE-BASED FOR NOW)
+    # SUMMARY INSIGHTS
+
     insights = {
         "charged_vehicles": int(charged_vehicles),
         "total_charged_cycles": int(total_cycles),
@@ -69,11 +79,42 @@ def generate_charge_analysis(start_date: str, end_date: str):
         ) if total_cycles > 0 else 0
     }
 
+    report_df["MAX_TEMP_OVERALL"] = report_df[
+        ["MAX_Temp_Pack_A", "MAX_Temp_Pack_B", "MAX_Temp_Pack_C", "MAX_Temp_Pack_D"]
+    ].max(axis=1)
+
+    charts = {
+        "bar_total_cycles": report_df[["City", "Total_Charged_Cycles"]].to_dict("records"),
+
+        "grouped_vehicles": report_df[
+            ["City", "Charged_Vehicles", "Total_Charged_Cycles"]
+        ].to_dict("records"),
+
+        "stacked_charging": report_df[
+            ["City", "Opportunity_Charged_Cycles", "Full_Charged_Cycles"]
+        ].to_dict("records"),
+
+        "temperature_line": report_df[
+            ["City", "MAX_TEMP_OVERALL"]
+        ].to_dict("records"),
+
+        "fault_bubble": report_df[
+            ["City", "Critical_Faulty_Cycles", "Interruption_Cycles"]
+        ].to_dict("records")
+    }
+
+
+    # FINAL RESPONSE
     return {
         "date_range": {
             "start_date": start_date,
             "end_date": end_date
         },
+        "filters": {
+            "city": city
+        },
         "summary": insights,
-        "report_table": report_table
+        "report_table": report_table,
+        "charts": charts
+
     }

@@ -12,19 +12,22 @@ llm = ChatGroq(
     temperature=0
 )
 
-# 
-# DATE EXTRACTION PROMPT
-date_prompt = PromptTemplate(
+# DATE_CITY EXTRACTION PROMPT
+
+date_city_prompt = PromptTemplate(
     input_variables=["user_query"],
     template="""
 You are an information extraction assistant.
 
-Extract the start date and end date from the user query.
+Extract the following from the user query:
+1. start_date
+2. end_date
+3. city (if mentioned, else null)
 
 Rules:
 - Return ONLY valid JSON
 - Date format must be YYYY-MM-DD
-- If a single date range is mentioned, extract it
+- City must be a single word or null
 - Do not add explanations
 
 User Query:
@@ -33,50 +36,70 @@ User Query:
 Expected JSON format:
 {{
   "start_date": "YYYY-MM-DD",
-  "end_date": "YYYY-MM-DD"
+  "end_date": "YYYY-MM-DD",
+  "city": "Delhi" | null
 }}
 """
 )
 
-def extract_dates(user_query: str):
+def extract_query_filters(user_query: str):
     response = llm.invoke(
-        date_prompt.format(user_query=user_query)
+        date_city_prompt.format(user_query=user_query)
     )
 
-    try:
-        return json.loads(response.content)
-    except json.JSONDecodeError:
-        raise ValueError("LLM failed to extract dates correctly")
+    text = response.content.strip()
+    start = text.find("{")
+    end = text.rfind("}")
+
+    if start == -1 or end == -1:
+        raise ValueError("Invalid LLM extraction output")
+
+    return json.loads(text[start:end + 1])
     
-# -------------------------
 # INSIGHT GENERATION PROMPT
-# -------------------------
-insight_prompt = PromptTemplate(
-    input_variables=["metrics", "start_date", "end_date"],
+
+detailed_report_prompt = PromptTemplate(
+    input_variables=["table_data", "start_date", "end_date", "city"],
     template="""
-You are a data analyst.
+You are a senior EV data analyst.
 
-Given the following charging analysis metrics between {start_date} and {end_date},
-generate 4–5 concise business insights.
+Generate a detailed analytical report for the charging data.
 
-Rules:
-- Focus on charging behavior, faults, interruptions, and efficiency
+Context:
+- Date Range: {start_date} to {end_date}
+- City Filter: {city}
+
+Instructions:
+- Write in clear paragraphs (not bullets)
+- Explain ALL columns from the table
+- Compare patterns across vehicle types
+- Explain opportunity vs full charging clearly
+- Discuss faults and interruptions in reliability context
+- Temperature must be discussed as ONE common concept (overall max temperature)
 - Do NOT invent numbers
-- Use only provided data
-- Use professional tone
+- Use ONLY provided data
 
-Metrics:
-{metrics}
+Structure the report into sections:
+1. Overview of Charging Activity
+2. Vehicle Utilization Analysis
+3. Charging Completion Behavior
+4. Reliability and Fault Analysis
+5. Battery Temperature Analysis
+6. Key City-Level Findings
+
+Charging Table Data (JSON):
+{table_data}
 """
 )
 
-def generate_insights(metrics: dict, start_date: str, end_date: str):
+
+def generate_detailed_insights(report_table, start_date, end_date, city):
     response = llm.invoke(
-        insight_prompt.format(
-            metrics=json.dumps(metrics, indent=2),
+        detailed_report_prompt.format(
+            table_data=json.dumps(report_table, indent=2),
             start_date=start_date,
-            end_date=end_date
+            end_date=end_date,
+            city=city if city else "All Cities"
         )
     )
-
     return response.content.strip()
