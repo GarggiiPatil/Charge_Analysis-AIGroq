@@ -28,6 +28,7 @@ class AnalysisResponse(BaseModel):
     summary: dict
     insights: str
     report_table: list
+    charts: dict
 
 # API ENDPOINT
 
