@@ -3,6 +3,7 @@ import QueryBox from "./components/QueryBox";
 import SummaryCards from "./components/SummaryCards";
 import ReportTable from "./components/ReportTable";
 import Insights from "./components/Insights";
+import Charts from "./components/Charts";
 import "./index.css";
 
 function App() {
@@ -59,6 +60,7 @@ function App() {
           <SummaryCards summary={data.summary} />
           <Insights insights={data.insights} />
           <ReportTable rows={data.report_table} />
+          <Charts charts={data.charts}/>
         </>
       )}
     </div>
