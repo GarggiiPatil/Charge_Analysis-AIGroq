@@ -33,7 +33,7 @@ function Insights({ insights }) {
 
   return (
     <div className="insights-section">
-      <h2 className="insights-title">Key Insights</h2>
+      <h2 className="insights-title">Summary</h2>
       <ul className="insights-list">
         {insightsList.map((insight, index) => (
           <li 

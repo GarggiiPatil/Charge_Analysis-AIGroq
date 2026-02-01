@@ -1,6 +1,5 @@
 import Plot from "react-plotly.js";
 
-<<<<<<< HEAD
 function Charts({ charts }) {
   if (!charts) return null;
 
@@ -131,32 +130,42 @@ function Charts({ charts }) {
         {/* 2️⃣ Charged Vehicles vs Total Charging Cycles */}
         <div style={cardStyle} className="chart-card">
           <div style={titleStyle}>Charged Vehicles vs Total Charging Cycles</div>
+
           <Plot
             data={[
-              { 
-                x: cities, 
-                y: chargedVehicles, 
-                type: "bar", 
+              {
+                x: cities,
+                y: chargedVehicles,
+                type: "bar",
                 name: "Charged Vehicles",
-                marker: { color: chartColors.secondary }
+                marker: {
+                  color: "#14b8a6"   // ✅ teal
+                }
               },
-              { 
-                x: cities, 
-                y: totalVehicles, 
-                type: "bar", 
+              {
+                x: cities,
+                y: totalVehicles,
+                type: "bar",
                 name: "Total Charging Cycles",
-                marker: { color: chartColors.primary }
+                marker: {
+                  color: "#f97316"   // ✅ orange
+                }
               }
             ]}
-            layout={{ 
-              ...transparentLayout, 
+            layout={{
+              ...transparentLayout,
               barmode: "group",
-              legend: { orientation: "h", y: -0.2 }
+              legend: {
+                orientation: "h",
+                y: -0.2
+              }
             }}
             config={{ displayModeBar: false, responsive: true }}
             style={{ width: "100%", height: "100%" }}
           />
         </div>
+
+
 
         {/* 3️⃣ Opportunity vs Full Charging Cycles */}
         <div style={cardStyle} className="chart-card">
@@ -190,60 +199,185 @@ function Charts({ charts }) {
 
         {/* 4️⃣ Maximum Battery Temperature */}
         <div style={cardStyle} className="chart-card">
-          <div style={titleStyle}>Maximum Battery Temperature Trend (°C)</div>
+          <div style={titleStyle}>Maximum Battery Temperature by City (°C)</div>
+
           <Plot
             data={[
               {
                 x: cities,
                 y: temperatures,
                 type: "scatter",
-                mode: "lines+markers",
-                line: { 
-                  color: chartColors.danger, 
-                  width: 3,
-                  shape: "spline"
-                },
-                marker: { 
-                  size: 10, 
-                  color: chartColors.danger,
-                  line: { color: "#fff", width: 2 }
-                }
-              }
-            ]}
-            layout={transparentLayout}
-            config={{ displayModeBar: false, responsive: true }}
-            style={{ width: "100%", height: "100%" }}
-          />
-        </div>
+                mode: "markers",   // ✅ scatter only — no lines
 
-        {/* 5️⃣ Critical Faults vs Interruptions */}
-        <div style={cardStyle} className="chart-card">
-          <div style={titleStyle}>Critical Faults vs Charging Interruptions</div>
-          <Plot
-            data={[
-              {
-                x: faults,
-                y: interruptions,
-                text: cities,
-                mode: "markers",
                 marker: {
-                  size: faults.map(v => Math.max(v * 12 + 15, 15)),
-                  color: chartColors.danger,
-                  opacity: 0.7,
-                  line: { color: "#fff", width: 2 }
+                  size: 14,
+                  color: temperatures,   // color scale by value
+                  colorscale: "Reds",
+                  showscale: true,
+                  line: { color: "#ffffff", width: 2 }
                 },
-                type: "scatter"
+
+                text: cities,
+                hovertemplate:
+                  "<b>%{text}</b><br>" +
+                  "Max Temp: %{y} °C<extra></extra>"
               }
             ]}
+
             layout={{
               ...transparentLayout,
-              xaxis: { title: "Critical Faulty Cycles", gridcolor: "#e2e8f0" },
-              yaxis: { title: "Interruption Cycles", gridcolor: "#e2e8f0" }
+              yaxis: {
+                title: "Temperature (°C)",
+                gridcolor: "#e2e8f0"
+              },
+              xaxis: {
+                title: "City"
+              }
             }}
+
             config={{ displayModeBar: false, responsive: true }}
             style={{ width: "100%", height: "100%" }}
           />
+
         </div>
+
+
+        {/* 5️⃣ Critical Faults vs Interruptions - ENHANCED BUBBLE CHART */}
+        <div style={cardStyle}>
+          <div style={titleStyle}>Critical Faults vs Charging Interruptions</div>
+
+          {(() => {
+            const minFault = Math.min(...faults);
+            const maxFault = Math.max(...faults);
+            const minInterruption = Math.min(...interruptions);
+            const maxInterruption = Math.max(...interruptions);
+
+            // Enhanced bubble sizing
+            const MIN_SIZE = 20;
+            const MAX_SIZE = 60;
+
+            const bubbleSizes = faults.map(v => {
+              if (maxFault === minFault) return 35;
+              return (
+                MIN_SIZE +
+                ((v - minFault) / (maxFault - minFault)) *
+                (MAX_SIZE - MIN_SIZE)
+              );
+            });
+
+            // Dynamic color gradient based on severity
+            const bubbleColors = faults.map((f, i) => {
+              const faultIntensity = maxFault === minFault ? 0.5 : (f - minFault) / (maxFault - minFault);
+              const interruptIntensity = maxInterruption === minInterruption ? 0.5 : (interruptions[i] - minInterruption) / (maxInterruption - minInterruption);
+              
+              // Combined severity score
+              const severity = (faultIntensity + interruptIntensity) / 2;
+              
+              // Color gradient: Green (low) → Yellow (medium) → Orange → Red (high)
+              if (severity < 0.33) {
+                const ratio = severity / 0.33;
+                return `rgba(16, 185, 129, ${0.7 + ratio * 0.3})`; // Green shades
+              } else if (severity < 0.66) {
+                const ratio = (severity - 0.33) / 0.33;
+                return `rgba(245, 158, 11, ${0.7 + ratio * 0.3})`; // Yellow/Orange shades
+              } else {
+                const ratio = (severity - 0.66) / 0.34;
+                return `rgba(239, 68, 68, ${0.7 + ratio * 0.3})`; // Red shades
+              }
+            });
+
+            return (
+              <Plot
+                data={[
+                  {
+                    x: faults,
+                    y: interruptions,
+                    text: cities,
+                    mode: "markers+text",
+                    textposition: "top center",
+                    textfont: {
+                      size: 11,
+                      color: "#1e293b",
+                      family: "'Outfit', sans-serif",
+                      weight: 700
+                    },
+                    marker: {
+                      size: bubbleSizes,
+                      color: bubbleColors,
+                      sizemode: "diameter",
+                      opacity: 0.8,
+                      line: { 
+                        width: 2.5,
+                        color: "#ffffff"
+                      }
+                    },
+                    type: "scatter",
+                    customdata: cities.map((city, i) => [city, faults[i], interruptions[i]]),
+                    hovertemplate: 
+                      "<b>%{customdata[0]}</b><br>" +
+                      "Critical Faults: %{customdata[1]}<br>" +
+                      "Interruptions: %{customdata[2]}<br>" +
+                      "<extra></extra>",
+                    hoverlabel: {
+                      bgcolor: "#1e293b",
+                      font: { 
+                        size: 14, 
+                        color: "#ffffff", 
+                        family: "'Outfit', sans-serif"
+                      },
+                      bordercolor: "#3b82f6",
+                      align: "left"
+                    }
+                  }
+                ]}
+                layout={{
+                  ...transparentLayout,
+                  height: 380,
+                  margin: { t: 30, r: 30, b: 60, l: 70 },
+                  xaxis: { 
+                    title: {
+                      text: "Critical Faulty Cycles",
+                      font: { 
+                        size: 14, 
+                        weight: 600,
+                        color: "#475569"
+                      }
+                    },
+                    gridcolor: "#e2e8f0",
+                    showgrid: true,
+                    zeroline: false,
+                    showline: true,
+                    linewidth: 2,
+                    linecolor: "#cbd5e1"
+                  },
+                  yaxis: { 
+                    title: {
+                      text: "Interruption Cycles",
+                      font: { 
+                        size: 14, 
+                        weight: 600,
+                        color: "#475569"
+                      }
+                    },
+                    gridcolor: "#e2e8f0",
+                    showgrid: true,
+                    zeroline: false,
+                    showline: true,
+                    linewidth: 2,
+                    linecolor: "#cbd5e1"
+                  },
+                  hovermode: "closest"
+                }}
+                config={{ 
+                  displayModeBar: false,
+                  responsive: true
+                }}
+                style={{ width: "100%", height: "100%" }}
+              />
+            );
+          })()}
+        </div>
+
 
         {/* 6️⃣ Charging Completion Distribution */}
         <div style={cardStyle} className="chart-card">
@@ -436,83 +570,3 @@ export default Charts;
 // }
 
 // export default Charts;
-=======
-function Charts({charts}){
-    if(!charts) return null;
-
-    //CHART 1: TOTAL CHARGE CYCLE BY CITY
-    const cityName = charts.cycles_by_city.map(d => d.City);
-    const totalCycles = charts.cycles_by_city.map(d => Total_Charged_Cycles);
-
-    //CHART 2: OPPORTUNITY VS FULL CHARGING
-    const oppCycles = charts.charging_type.map(d => d.Opportunity_Charged_Cycles);
-    const fullCycles = charts.charging_type.map(d => d.Full_Charged_Cycles);
-
-    //CHART 3: FAULTS AND INTERRUPTIONS
-    const faults = charts.faults_interruptions.map( d => d.Critical_Faulty_Cycles);
-    const interruptions = charts.faults_interruptions.map( d => d.Interruptions_Cycles);
-
-    return(
-        <div>
-            <h2>Analytics Visualizations</h2>
-            {/* Chart 1*/}
-            <Plot 
-            data = {[
-                {
-                    x: cityNames,
-                    y: totalCycles,
-                    type: "bar",
-                    name: "Total Charged Cycles"
-                }
-            ]}
-            layout={{title: "Total Charged Cyles by City"}}></Plot>
-
-            {/* Chart 2*/}
-            <Plot>
-                data={[
-                    {
-                        x: cityNames,
-                        y: oppCycles,
-                        type: "bar",
-                        name: "Oppotunity Charging"
-                    },
-                    {
-                        x: cityNames,
-                        y: fullCycles,
-                        type: "bar",
-                        name: "Full Charging"
-                    }
-                ]}
-                layout={{
-                    title:"Opportunity vs Full Charging",
-                    barmode:"stack"
-                }}
-            </Plot>
-            
-            {/* Chart 3*/}
-            <Plot>
-                data={[
-                    {
-                        x: cityNames,
-                        y: faults,
-                        type: "bar",
-                        name: "Critical Faults"
-                    },
-                    {
-                        x: cityNames,
-                        y: interruptions,
-                        type: "bar",
-                        name: "Interruptions"
-                    }
-                ]}
-                layout={{
-                    title:"Fault and Interruptions",
-                    barmode:"group"
-                }}
-            </Plot>
-        </div>
-    );
-}
-
-export default Charts;
->>>>>>> a1cf617aa715176a36b6cd44be8724eebf98e41e

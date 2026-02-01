@@ -46,7 +46,6 @@ function App() {
           setError={setError}
         />
 
-<<<<<<< HEAD
         {/* Status Messages */}
         {loading && (
           <div className="status-message loading">
@@ -81,17 +80,6 @@ function App() {
           <p className="footer-version">Dashboard v2.0</p>
         </div>
       </footer>
-=======
-      {/* Results Section */}
-      {data && (
-        <>
-          <SummaryCards summary={data.summary} />
-          <Insights insights={data.insights} />
-          <ReportTable rows={data.report_table} />
-          <Charts charts={data.charts}/>
-        </>
-      )}
->>>>>>> a1cf617aa715176a36b6cd44be8724eebf98e41e
     </div>
   );
 }
