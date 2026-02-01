@@ -119,8 +119,6 @@ KPI summary cards
 LLM-generated business insights
 Detailed charge analysis table (city and vehicle-type wise)
 
-<img width="1856" height="886" alt="Screenshot 2026-01-27 123807" src="https://github.com/user-attachments/assets/12b486ff-dc47-4f53-aacb-ff4ab127ea1d" />
-<img width="1586" height="872" alt="Screenshot 2026-01-27 123820" src="https://github.com/user-attachments/assets/036f380a-b5c4-49bd-964d-4d56017e40ad" />
 
 
 
