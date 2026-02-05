@@ -1,7 +1,9 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from app.services.llm_service import generate_detailed_insights, extract_query_filters
+
+from app.routes.ppt_routes import router as ppt_router
+from app.services.llm_service import extract_query_filters, generate_detailed_insights
 from app.services.metrics import generate_charge_analysis
 
 app = FastAPI(
@@ -10,6 +12,10 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Register routes
+app.include_router(ppt_router)
+
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"],
@@ -18,8 +24,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# REQUEST / RESPONSE MODELS
-
+# Models
 class AnalysisRequest(BaseModel):
     query: str
 
@@ -30,16 +35,15 @@ class AnalysisResponse(BaseModel):
     report_table: list
     charts: dict
 
-# API ENDPOINT
-
-@app.post("/analyze")
+# Analyze endpoint
+@app.post("/analyze", response_model=AnalysisResponse)
 def analyze_charge_report(request: AnalysisRequest):
     try:
         filters = extract_query_filters(request.query)
 
         start_date = filters.get("start_date")
         end_date = filters.get("end_date")
-        city = filters.get("city")  # can be None
+        city = filters.get("city")
 
         if not start_date or not end_date:
             raise ValueError("Start date or end date missing")
@@ -66,5 +70,4 @@ def analyze_charge_report(request: AnalysisRequest):
         }
 
     except Exception as e:
-        print("ERROR:", str(e))
         raise HTTPException(status_code=400, detail=str(e))

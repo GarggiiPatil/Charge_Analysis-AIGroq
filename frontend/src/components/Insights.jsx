@@ -20,7 +20,7 @@ function Insights({ insights }) {
 
   if (insightsList.length === 0) return null;
 
-  // Parse markdown-style bold text **text**
+  // Parse markdown-style bold text
   const parseMarkdown = (text) => {
     const parts = text.split(/(\*\*.*?\*\*)/g);
     return parts.map((part, index) => {
